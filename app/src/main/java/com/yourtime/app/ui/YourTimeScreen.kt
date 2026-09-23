@@ -90,8 +90,7 @@ import java.time.format.DateTimeFormatter
 
 enum class AppTab {
     Home,
-    Insights,
-    Reflect
+    Insights
 }
 
 @Composable
@@ -167,10 +166,6 @@ fun YourTimeScreen(
 
                 AppTab.Insights -> {
                     InsightsScreen(age = calculatedState?.age)
-                }
-
-                AppTab.Reflect -> {
-                    ReflectScreen(onResetRequested = { showResetDialog = true })
                 }
             }
         }
@@ -739,25 +734,6 @@ private fun YourTimeBottomNav(
                 )
             },
             label = { Text("Insights") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CoralPrimary,
-                selectedTextColor = CoralPrimary,
-                unselectedIconColor = TextMuted,
-                unselectedTextColor = TextMuted,
-                indicatorColor = Color.Transparent
-            )
-        )
-
-        NavigationBarItem(
-            selected = selectedTab == AppTab.Reflect,
-            onClick = { onTabSelected(AppTab.Reflect) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.HourglassEmpty,
-                    contentDescription = "Reflect"
-                )
-            },
-            label = { Text("Settings") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = CoralPrimary,
                 selectedTextColor = CoralPrimary,
