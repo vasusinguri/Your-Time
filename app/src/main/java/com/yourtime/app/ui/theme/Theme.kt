@@ -7,18 +7,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = CoralPrimary,
-    onPrimary = TextWhite,
-    primaryContainer = CardBackground,
-    secondary = AmberSecondary,
-    onSecondary = TextWhite,
-    background = BackgroundDark,
-    surface = SurfaceDark,
-    surfaceVariant = CardBackground,
+    primary = CyberCyan,
+    onPrimary = OledBlack,
+    primaryContainer = OledCard,
+    secondary = EmeraldGreen,
+    onSecondary = OledBlack,
+    background = OledBlack,
+    surface = OledSurface,
+    surfaceVariant = OledCard,
     onBackground = TextWhite,
     onSurface = TextWhite,
     onSurfaceVariant = TextMuted,
-    outline = CardBorder,
+    outline = OledCardBorder,
     error = ErrorRed
 )
 

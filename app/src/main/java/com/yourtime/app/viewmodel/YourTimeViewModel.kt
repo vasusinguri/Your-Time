@@ -5,12 +5,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yourtime.app.data.PreferencesManager
 import com.yourtime.app.domain.AgeCalculator
+import com.yourtime.app.domain.NextBirthdayCalculator
+import com.yourtime.app.domain.PlanetaryAgeCalculator
+import com.yourtime.app.domain.UserProfile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -22,147 +25,195 @@ class YourTimeViewModel(
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<YourTimeUiState>(YourTimeUiState.Initial())
+    private val _uiState = MutableStateFlow<YourTimeUiState>(YourTimeUiState.Empty())
     val uiState: StateFlow<YourTimeUiState> = _uiState.asStateFlow()
 
     private var tickerJob: Job? = null
     private var isAppInForeground: Boolean = true
 
     init {
-        loadSavedBirthDateTime()
+        observeProfiles()
     }
 
-    private fun loadSavedBirthDateTime() {
+    private fun observeProfiles() {
         viewModelScope.launch {
-            val saved = preferencesManager.birthDateTimeFlow.firstOrNull()
-            if (saved != null) {
-                if (AgeCalculator.isValid(saved)) {
-                    val age = AgeCalculator.calculate(saved)
-                    _uiState.value = YourTimeUiState.Calculated(
-                        birthDateTime = saved,
-                        age = age
-                    )
-                    startTicker(saved)
+            combine(
+                preferencesManager.profilesFlow,
+                preferencesManager.activeProfileIdFlow
+            ) { profiles, activeId ->
+                Pair(profiles, activeId)
+            }.collect { (profiles, activeId) ->
+                if (profiles.isEmpty()) {
+                    stopTicker()
+                    _uiState.update { current ->
+                        if (current is YourTimeUiState.Empty) current else YourTimeUiState.Empty()
+                    }
                 } else {
-                    _uiState.value = YourTimeUiState.Initial(
-                        errorMessage = "Saved birth date was in the future. Please re-enter."
-                    )
+                    val active = profiles.firstOrNull { it.id == activeId } ?: profiles.first()
+                    val now = LocalDateTime.now()
+                    val age = AgeCalculator.calculate(active.birthDateTime, now)
+                    val nextBirthday = NextBirthdayCalculator.calculate(active.birthDateTime, now)
+                    val planetary = PlanetaryAgeCalculator.calculate(active.birthDateTime, now)
+
+                    _uiState.update { current ->
+                        when (current) {
+                            is YourTimeUiState.Ready -> current.copy(
+                                profiles = profiles,
+                                activeProfileId = active.id,
+                                activeProfile = active,
+                                age = age,
+                                nextBirthday = nextBirthday,
+                                planetaryAges = planetary
+                            )
+                            is YourTimeUiState.Empty -> YourTimeUiState.Ready(
+                                profiles = profiles,
+                                activeProfileId = active.id,
+                                activeProfile = active,
+                                age = age,
+                                nextBirthday = nextBirthday,
+                                planetaryAges = planetary
+                            )
+                        }
+                    }
+                    startTicker(active.birthDateTime)
                 }
             }
         }
     }
 
-    fun onDateSelected(date: LocalDate) {
+    // --- Onboarding / Initial Setup ---
+
+    fun onInitialNameChanged(name: String) {
         _uiState.update { current ->
-            when (current) {
-                is YourTimeUiState.Initial -> current.copy(selectedDate = date, errorMessage = null)
-                is YourTimeUiState.Calculated -> current.copy(editDate = date, editErrorMessage = null)
-            }
+            if (current is YourTimeUiState.Empty) current.copy(initialName = name) else current
         }
     }
 
-    fun onTimeSelected(time: LocalTime) {
+    fun onInitialDateSelected(date: LocalDate) {
         _uiState.update { current ->
-            when (current) {
-                is YourTimeUiState.Initial -> current.copy(selectedTime = time, errorMessage = null)
-                is YourTimeUiState.Calculated -> current.copy(editTime = time, editErrorMessage = null)
-            }
+            if (current is YourTimeUiState.Empty) current.copy(selectedDate = date, errorMessage = null) else current
         }
     }
 
-    fun calculate() {
-        val currentState = _uiState.value as? YourTimeUiState.Initial ?: return
-        val date = currentState.selectedDate
+    fun onInitialTimeSelected(time: LocalTime) {
+        _uiState.update { current ->
+            if (current is YourTimeUiState.Empty) current.copy(selectedTime = time, errorMessage = null) else current
+        }
+    }
+
+    fun createInitialProfile() {
+        val current = _uiState.value as? YourTimeUiState.Empty ?: return
+        val date = current.selectedDate
         if (date == null) {
-            _uiState.update { currentState.copy(errorMessage = "Please select your date of birth.") }
+            _uiState.update { current.copy(errorMessage = "Please select your date of birth.") }
             return
         }
 
-        val time = currentState.selectedTime
-        val birthDateTime = LocalDateTime.of(date, time)
+        val birthDateTime = LocalDateTime.of(date, current.selectedTime)
         val now = LocalDateTime.now()
 
         if (!AgeCalculator.isValid(birthDateTime, now)) {
-            _uiState.update {
-                currentState.copy(
-                    errorMessage = "Birth date & time cannot be in the future."
-                )
-            }
+            _uiState.update { current.copy(errorMessage = "Birth date & time cannot be in the future.") }
             return
         }
 
-        val initialAge = AgeCalculator.calculate(birthDateTime, now)
-        _uiState.value = YourTimeUiState.Calculated(
+        val newProfile = UserProfile(
+            name = current.initialName.trim().ifBlank { "Me" },
             birthDateTime = birthDateTime,
-            age = initialAge
+            tag = "Me"
         )
 
         viewModelScope.launch {
-            preferencesManager.saveBirthDateTime(birthDateTime)
-        }
-
-        startTicker(birthDateTime)
-    }
-
-    fun startEditing() {
-        val current = _uiState.value as? YourTimeUiState.Calculated ?: return
-        _uiState.update {
-            current.copy(
-                isEditing = true,
-                editDate = current.birthDateTime.toLocalDate(),
-                editTime = current.birthDateTime.toLocalTime(),
-                editErrorMessage = null
-            )
+            preferencesManager.addOrUpdateProfile(newProfile)
         }
     }
 
-    fun cancelEditing() {
-        val current = _uiState.value as? YourTimeUiState.Calculated ?: return
-        _uiState.update {
-            current.copy(
-                isEditing = false,
-                editDate = null,
-                editTime = null,
-                editErrorMessage = null
-            )
-        }
-    }
+    // --- Profile Management ---
 
-    fun saveEditing() {
-        val current = _uiState.value as? YourTimeUiState.Calculated ?: return
-        val newDate = current.editDate ?: current.birthDateTime.toLocalDate()
-        val newTime = current.editTime ?: current.birthDateTime.toLocalTime()
-        val newBirthDateTime = LocalDateTime.of(newDate, newTime)
+    fun switchProfile(profileId: String) {
+        val current = _uiState.value as? YourTimeUiState.Ready ?: return
+        val target = current.profiles.firstOrNull { it.id == profileId } ?: return
+
         val now = LocalDateTime.now()
+        val age = AgeCalculator.calculate(target.birthDateTime, now)
+        val nextBirthday = NextBirthdayCalculator.calculate(target.birthDateTime, now)
+        val planetary = PlanetaryAgeCalculator.calculate(target.birthDateTime, now)
 
-        if (!AgeCalculator.isValid(newBirthDateTime, now)) {
-            _uiState.update {
-                current.copy(editErrorMessage = "Birth date & time cannot be in the future.")
-            }
-            return
+        _uiState.update {
+            current.copy(
+                activeProfileId = target.id,
+                activeProfile = target,
+                age = age,
+                nextBirthday = nextBirthday,
+                planetaryAges = planetary
+            )
         }
-
-        val updatedAge = AgeCalculator.calculate(newBirthDateTime, now)
-        _uiState.value = YourTimeUiState.Calculated(
-            birthDateTime = newBirthDateTime,
-            age = updatedAge,
-            isEditing = false
-        )
 
         viewModelScope.launch {
-            preferencesManager.saveBirthDateTime(newBirthDateTime)
+            preferencesManager.setActiveProfileId(profileId)
         }
 
-        startTicker(newBirthDateTime)
+        startTicker(target.birthDateTime)
     }
 
-    fun reset() {
+    fun showAddProfileDialog() {
+        _uiState.update { current ->
+            if (current is YourTimeUiState.Ready) current.copy(isAddingProfile = true) else current
+        }
+    }
+
+    fun hideAddProfileDialog() {
+        _uiState.update { current ->
+            if (current is YourTimeUiState.Ready) current.copy(isAddingProfile = false) else current
+        }
+    }
+
+    fun addNewProfile(name: String, tag: String, birthDateTime: LocalDateTime) {
+        val newProfile = UserProfile(
+            name = name.trim().ifBlank { "Profile" },
+            birthDateTime = birthDateTime,
+            tag = tag.trim().ifBlank { "Family" }
+        )
+        viewModelScope.launch {
+            preferencesManager.addOrUpdateProfile(newProfile)
+            hideAddProfileDialog()
+        }
+    }
+
+    fun startEditingProfile(profile: UserProfile) {
+        _uiState.update { current ->
+            if (current is YourTimeUiState.Ready) current.copy(editingProfile = profile) else current
+        }
+    }
+
+    fun cancelEditingProfile() {
+        _uiState.update { current ->
+            if (current is YourTimeUiState.Ready) current.copy(editingProfile = null) else current
+        }
+    }
+
+    fun saveEditedProfile(updatedProfile: UserProfile) {
+        viewModelScope.launch {
+            preferencesManager.addOrUpdateProfile(updatedProfile)
+            cancelEditingProfile()
+        }
+    }
+
+    fun deleteProfile(profileId: String) {
+        viewModelScope.launch {
+            preferencesManager.deleteProfile(profileId)
+        }
+    }
+
+    fun resetAll() {
         stopTicker()
         viewModelScope.launch {
-            preferencesManager.clearBirthDateTime()
+            preferencesManager.clearAll()
         }
-        _uiState.value = YourTimeUiState.Initial()
+        _uiState.value = YourTimeUiState.Empty()
     }
+
+    // --- Live Ticker ---
 
     private fun startTicker(birthDateTime: LocalDateTime) {
         stopTicker()
@@ -170,18 +221,25 @@ class YourTimeViewModel(
 
         tickerJob = viewModelScope.launch {
             while (isActive) {
+                delay(1000L)
                 val now = LocalDateTime.now()
                 if (AgeCalculator.isValid(birthDateTime, now)) {
-                    val currentAge = AgeCalculator.calculate(birthDateTime, now)
-                    _uiState.update { state ->
-                        if (state is YourTimeUiState.Calculated) {
-                            state.copy(age = currentAge)
+                    val age = AgeCalculator.calculate(birthDateTime, now)
+                    val nextBirthday = NextBirthdayCalculator.calculate(birthDateTime, now)
+                    val planetary = PlanetaryAgeCalculator.calculate(birthDateTime, now)
+
+                    _uiState.update { current ->
+                        if (current is YourTimeUiState.Ready && current.activeProfile.birthDateTime == birthDateTime) {
+                            current.copy(
+                                age = age,
+                                nextBirthday = nextBirthday,
+                                planetaryAges = planetary
+                            )
                         } else {
-                            state
+                            current
                         }
                     }
                 }
-                delay(1000L)
             }
         }
     }
@@ -194,14 +252,21 @@ class YourTimeViewModel(
     fun onForegroundResume() {
         isAppInForeground = true
         val state = _uiState.value
-        if (state is YourTimeUiState.Calculated) {
-            // Immediate recalculation upon returning to foreground to prevent any drift
+        if (state is YourTimeUiState.Ready) {
             val now = LocalDateTime.now()
-            if (AgeCalculator.isValid(state.birthDateTime, now)) {
-                val updatedAge = AgeCalculator.calculate(state.birthDateTime, now)
-                _uiState.update { state.copy(age = updatedAge) }
+            if (AgeCalculator.isValid(state.activeProfile.birthDateTime, now)) {
+                val age = AgeCalculator.calculate(state.activeProfile.birthDateTime, now)
+                val nextBirthday = NextBirthdayCalculator.calculate(state.activeProfile.birthDateTime, now)
+                val planetary = PlanetaryAgeCalculator.calculate(state.activeProfile.birthDateTime, now)
+                _uiState.update {
+                    state.copy(
+                        age = age,
+                        nextBirthday = nextBirthday,
+                        planetaryAges = planetary
+                    )
+                }
             }
-            startTicker(state.birthDateTime)
+            startTicker(state.activeProfile.birthDateTime)
         }
     }
 

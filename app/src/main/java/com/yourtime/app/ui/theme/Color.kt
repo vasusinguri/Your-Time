@@ -3,36 +3,31 @@ package com.yourtime.app.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// Ultra-premium Sunset Twilight / Cosmic Dark Theme
-val BackgroundDark = Color(0xFF0C0F17)
-val SurfaceDark = Color(0xFF131823)
-val CardBackground = Color(0xFF19202E)
-val CardBorder = Color(0xFF263246)
+// Deep OLED Pitch Black Palette
+val OledBlack = Color(0xFF000000)
+val OledSurface = Color(0xFF080C14)
+val OledCard = Color(0xFF0E1420)
+val OledCardBorder = Color(0xFF1A2638)
 
-// Sunset Coral & Amber Gradient Palette
-val CoralPrimary = Color(0xFFFF6347)
-val AmberSecondary = Color(0xFFFF8A3D)
-val CoralLight = Color(0xFFFF8566)
-val CoralGlow = Color(0x33FF6347)
+// Neon Cyber-Cyan & Emerald Accents
+val CyberCyan = Color(0xFF00F0FF)
+val EmeraldGreen = Color(0xFF10B981)
+val CyanGlow = Color(0x3300F0FF)
+val EmeraldGlow = Color(0x3310B981)
 
 // Text Colors
 val TextWhite = Color(0xFFFFFFFF)
-val TextMuted = Color(0xFF8E9BAE)
-val TextSubtitle = Color(0xFFBAC5D5)
+val TextMuted = Color(0xFF94A3B8)
+val TextSubtitle = Color(0xFFCBD5E1)
 
-// Functional & Accents
-val LiveGreen = Color(0xFF10B981)
-val ErrorRed = Color(0xFFEF4444)
+// Functional
+val ErrorRed = Color(0xFFFF5252)
 
-// Pre-defined Brushes
-val SunsetGradient = Brush.horizontalGradient(
-    colors = listOf(CoralPrimary, AmberSecondary)
+// Cyber Neon Gradient
+val CyberGradient = Brush.horizontalGradient(
+    colors = listOf(CyberCyan, EmeraldGreen)
 )
 
-val CardBackgroundBrush = Brush.verticalGradient(
-    colors = listOf(Color(0xFF1C2433), Color(0xFF161C28))
-)
-
-val MountainHorizonBrush = Brush.verticalGradient(
-    colors = listOf(Color.Transparent, Color(0x33FF6347), Color(0x661A1320), BackgroundDark)
+val CardGlowBorder = Brush.horizontalGradient(
+    colors = listOf(CyberCyan.copy(alpha = 0.5f), EmeraldGreen.copy(alpha = 0.5f))
 )

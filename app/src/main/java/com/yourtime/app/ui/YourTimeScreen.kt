@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -25,14 +25,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.HourglassEmpty
-import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -44,10 +39,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -59,7 +52,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -69,29 +61,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yourtime.app.ui.components.AddEditProfileDialog
 import com.yourtime.app.ui.components.AgeDisplayCards
 import com.yourtime.app.ui.components.DatePickerModal
+import com.yourtime.app.ui.components.NextBirthdayCard
+import com.yourtime.app.ui.components.PlanetaryAgeSection
+import com.yourtime.app.ui.components.ProfileBar
 import com.yourtime.app.ui.components.TimePickerModal
-import com.yourtime.app.ui.theme.BackgroundDark
-import com.yourtime.app.ui.theme.CardBackground
-import com.yourtime.app.ui.theme.CardBorder
-import com.yourtime.app.ui.theme.CoralPrimary
-import com.yourtime.app.ui.theme.LiveGreen
-import com.yourtime.app.ui.theme.SunsetGradient
-import com.yourtime.app.ui.theme.SurfaceDark
+import com.yourtime.app.ui.theme.CyberCyan
+import com.yourtime.app.ui.theme.CyberGradient
+import com.yourtime.app.ui.theme.EmeraldGreen
+import com.yourtime.app.ui.theme.OledBlack
+import com.yourtime.app.ui.theme.OledCard
+import com.yourtime.app.ui.theme.OledCardBorder
+import com.yourtime.app.ui.theme.OledSurface
 import com.yourtime.app.ui.theme.TextMuted
 import com.yourtime.app.ui.theme.TextSubtitle
 import com.yourtime.app.ui.theme.TextWhite
 import com.yourtime.app.viewmodel.YourTimeUiState
 import com.yourtime.app.viewmodel.YourTimeViewModel
-import java.time.LocalDate
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-
-enum class AppTab {
-    Home,
-    Insights
-}
 
 @Composable
 fun YourTimeScreen(
@@ -101,25 +90,28 @@ fun YourTimeScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var selectedTab by remember { mutableStateOf(AppTab.Home) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
-    val calculatedState = uiState as? YourTimeUiState.Calculated
+    val readyState = uiState as? YourTimeUiState.Ready
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = BackgroundDark,
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
+        containerColor = OledBlack,
         topBar = {
             YourTimeTopBar(
                 onShare = {
-                    calculatedState?.let { calc ->
-                        val age = calc.age
-                        val shareText = "I have been alive for ${age.years} years, ${age.months} months, " +
-                                "${age.days} days, ${age.hours} hours, ${age.minutes} minutes and ${age.seconds} seconds!\n" +
-                                "Track your journey with Your Time."
+                    readyState?.let { state ->
+                        val age = state.age
+                        val profileName = state.activeProfile.name
+                        val shareText = "According to Your Time, $profileName has been alive for " +
+                                "${age.years} years, ${age.months} months, ${age.days} days, " +
+                                "${age.hours} hours, ${age.minutes} minutes and ${age.seconds} seconds!\n" +
+                                "Next birthday in ${state.nextBirthday.days} days!"
                         val sendIntent = Intent().apply {
                             action = Intent.ACTION_SEND
                             putExtra(Intent.EXTRA_TEXT, shareText)
@@ -129,23 +121,17 @@ fun YourTimeScreen(
                     }
                 },
                 onOpenMenu = { showMenu = true },
-                isCalculated = calculatedState != null,
+                isReady = readyState != null,
                 showMenu = showMenu,
                 onDismissMenu = { showMenu = false },
-                onEdit = {
+                onEditProfile = {
                     showMenu = false
-                    viewModel.startEditing()
+                    readyState?.let { viewModel.startEditingProfile(it.activeProfile) }
                 },
-                onReset = {
+                onResetAll = {
                     showMenu = false
                     showResetDialog = true
                 }
-            )
-        },
-        bottomBar = {
-            YourTimeBottomNav(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
             )
         }
     ) { innerPadding ->
@@ -154,69 +140,108 @@ fun YourTimeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when (selectedTab) {
-                AppTab.Home -> {
-                    HomeTabContent(
-                        uiState = uiState,
+            when (val state = uiState) {
+                is YourTimeUiState.Empty -> {
+                    EmptyScreenContent(
+                        state = state,
+                        onNameChanged = { viewModel.onInitialNameChanged(it) },
                         onOpenDatePicker = { showDatePicker = true },
                         onOpenTimePicker = { showTimePicker = true },
-                        onCalculate = { viewModel.calculate() }
+                        onCalculate = { viewModel.createInitialProfile() }
                     )
                 }
 
-                AppTab.Insights -> {
-                    InsightsScreen(age = calculatedState?.age)
+                is YourTimeUiState.Ready -> {
+                    ReadyScreenContent(
+                        state = state,
+                        onSelectProfile = { viewModel.switchProfile(it) },
+                        onAddProfile = { viewModel.showAddProfileDialog() },
+                        onEditActiveProfile = { viewModel.startEditingProfile(state.activeProfile) }
+                    )
                 }
             }
         }
     }
 
-    // Date Picker Modal
+    // Initial Date Picker Modal
     if (showDatePicker) {
-        val initialDate = when (val state = uiState) {
-            is YourTimeUiState.Initial -> state.selectedDate
-            is YourTimeUiState.Calculated -> state.editDate ?: state.birthDateTime.toLocalDate()
-        }
+        val emptyState = uiState as? YourTimeUiState.Empty
         DatePickerModal(
             onDateSelected = { date ->
-                viewModel.onDateSelected(date)
+                viewModel.onInitialDateSelected(date)
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false },
-            initialDate = initialDate
+            initialDate = emptyState?.selectedDate
         )
     }
 
-    // Time Picker Modal
+    // Initial Time Picker Modal
     if (showTimePicker) {
-        val initialTime = when (val state = uiState) {
-            is YourTimeUiState.Initial -> state.selectedTime
-            is YourTimeUiState.Calculated -> state.editTime ?: state.birthDateTime.toLocalTime()
-        }
+        val emptyState = uiState as? YourTimeUiState.Empty
         TimePickerModal(
             onTimeSelected = { time ->
-                viewModel.onTimeSelected(time)
+                viewModel.onInitialTimeSelected(time)
                 showTimePicker = false
             },
             onDismiss = { showTimePicker = false },
-            initialTime = initialTime
+            initialTime = emptyState?.selectedTime ?: java.time.LocalTime.MIDNIGHT
         )
     }
 
-    // Reset Confirmation Dialog
+    // Add Profile Dialog
+    if (readyState?.isAddingProfile == true) {
+        AddEditProfileDialog(
+            profileToEdit = null,
+            canDelete = false,
+            onSave = { name, tag, birthDateTime ->
+                viewModel.addNewProfile(name, tag, birthDateTime)
+            },
+            onDismiss = { viewModel.hideAddProfileDialog() }
+        )
+    }
+
+    // Edit Profile Dialog
+    readyState?.editingProfile?.let { profileToEdit ->
+        AddEditProfileDialog(
+            profileToEdit = profileToEdit,
+            canDelete = readyState.profiles.size > 1,
+            onSave = { name, tag, birthDateTime ->
+                viewModel.saveEditedProfile(
+                    profileToEdit.copy(
+                        name = name,
+                        tag = tag,
+                        birthDateTime = birthDateTime
+                    )
+                )
+            },
+            onDelete = {
+                viewModel.deleteProfile(profileToEdit.id)
+                viewModel.cancelEditingProfile()
+            },
+            onDismiss = { viewModel.cancelEditingProfile() }
+        )
+    }
+
+    // Reset All Confirmation Dialog
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Reset Birth Time?", color = TextWhite) },
-            text = { Text("This will clear your saved birth date and time from this device.", color = TextMuted) },
+            title = { Text("Reset All Data?", color = TextWhite) },
+            text = {
+                Text(
+                    "This will clear all saved profiles and time history from this device.",
+                    color = TextMuted
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.reset()
+                        viewModel.resetAll()
                         showResetDialog = false
                     }
                 ) {
-                    Text("Reset", color = MaterialTheme.colorScheme.error)
+                    Text("Reset All", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -224,22 +249,7 @@ fun YourTimeScreen(
                     Text("Cancel", color = TextWhite)
                 }
             },
-            containerColor = CardBackground
-        )
-    }
-
-    // Edit Birth Date / Time Dialog (when user taps Edit in calculated state)
-    if (calculatedState?.isEditing == true) {
-        EditDetailsDialog(
-            state = calculatedState,
-            onOpenDatePicker = { showDatePicker = true },
-            onOpenTimePicker = { showTimePicker = true },
-            onSave = { viewModel.saveEditing() },
-            onReset = {
-                viewModel.cancelEditing()
-                showResetDialog = true
-            },
-            onCancel = { viewModel.cancelEditing() }
+            containerColor = OledCard
         )
     }
 }
@@ -248,16 +258,16 @@ fun YourTimeScreen(
 private fun YourTimeTopBar(
     onShare: () -> Unit,
     onOpenMenu: () -> Unit,
-    isCalculated: Boolean,
+    isReady: Boolean,
     showMenu: Boolean,
     onDismissMenu: () -> Unit,
-    onEdit: () -> Unit,
-    onReset: () -> Unit
+    onEditProfile: () -> Unit,
+    onResetAll: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -266,23 +276,23 @@ private fun YourTimeTopBar(
             Text(
                 text = "Your ",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 22.sp
                 ),
                 color = TextWhite
             )
             Text(
                 text = "Time",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 22.sp
                 ),
-                color = CoralPrimary
+                color = CyberCyan
             )
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isCalculated) {
+            if (isReady) {
                 IconButton(onClick = onShare) {
                     Icon(
                         imageVector = Icons.Default.Share,
@@ -306,17 +316,17 @@ private fun YourTimeTopBar(
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = onDismissMenu,
-                    modifier = Modifier.background(CardBackground)
+                    modifier = Modifier.background(OledCard)
                 ) {
-                    if (isCalculated) {
+                    if (isReady) {
                         DropdownMenuItem(
-                            text = { Text("Edit Birth Date/Time", color = TextWhite) },
-                            onClick = onEdit
+                            text = { Text("Edit Active Profile", color = TextWhite) },
+                            onClick = onEditProfile
                         )
                     }
                     DropdownMenuItem(
-                        text = { Text("Reset", color = MaterialTheme.colorScheme.error) },
-                        onClick = onReset
+                        text = { Text("Reset All", color = MaterialTheme.colorScheme.error) },
+                        onClick = onResetAll
                     )
                 }
             }
@@ -325,31 +335,9 @@ private fun YourTimeTopBar(
 }
 
 @Composable
-private fun HomeTabContent(
-    uiState: YourTimeUiState,
-    onOpenDatePicker: () -> Unit,
-    onOpenTimePicker: () -> Unit,
-    onCalculate: () -> Unit
-) {
-    when (val state = uiState) {
-        is YourTimeUiState.Initial -> {
-            InputScreenContent(
-                state = state,
-                onOpenDatePicker = onOpenDatePicker,
-                onOpenTimePicker = onOpenTimePicker,
-                onCalculate = onCalculate
-            )
-        }
-
-        is YourTimeUiState.Calculated -> {
-            CalculatedScreenContent(state = state)
-        }
-    }
-}
-
-@Composable
-private fun InputScreenContent(
-    state: YourTimeUiState.Initial,
+private fun EmptyScreenContent(
+    state: YourTimeUiState.Empty,
+    onNameChanged: (String) -> Unit,
     onOpenDatePicker: () -> Unit,
     onOpenTimePicker: () -> Unit,
     onCalculate: () -> Unit
@@ -367,16 +355,37 @@ private fun InputScreenContent(
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Let's calculate your journey.",
+            text = "Track your existence across time and space.",
             style = MaterialTheme.typography.bodyMedium,
             color = TextMuted,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(26.dp))
+
+        // Profile Name Input
+        OutlinedTextField(
+            value = state.initialName,
+            onValueChange = onNameChanged,
+            label = { Text("Your Name", color = TextMuted) },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = CyberCyan,
+                unfocusedBorderColor = OledCardBorder,
+                focusedTextColor = TextWhite,
+                unfocusedTextColor = TextWhite,
+                cursorColor = CyberCyan,
+                focusedContainerColor = OledSurface,
+                unfocusedContainerColor = OledSurface
+            ),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Date of Birth Card
-        InputCard(
+        InputPickerCard(
             label = "Date of Birth",
             valueText = state.selectedDate?.format(dateFormatter) ?: "Select Date",
             isPlaceholder = state.selectedDate == null,
@@ -387,7 +396,7 @@ private fun InputScreenContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Time of Birth Card
-        InputCard(
+        InputPickerCard(
             label = "Time of Birth",
             valueText = state.selectedTime.format(timeFormatter),
             isPlaceholder = false,
@@ -411,15 +420,15 @@ private fun InputScreenContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
-        // Sunset Gradient Button: "Calculate My Time ->"
+        // Cyber Gradient Button: "Calculate My Time ->"
         Button(
             onClick = onCalculate,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .background(SunsetGradient, shape = RoundedCornerShape(16.dp)),
+                .background(CyberGradient, shape = RoundedCornerShape(16.dp)),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -442,25 +451,25 @@ private fun InputScreenContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(36.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        // Philosophical quote
         Text(
             text = "“Time reveals everything.”",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontStyle = FontStyle.Italic
-            ),
+            style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
             color = TextMuted,
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(30.dp))
     }
 }
 
 @Composable
-private fun CalculatedScreenContent(
-    state: YourTimeUiState.Calculated
+private fun ReadyScreenContent(
+    state: YourTimeUiState.Ready,
+    onSelectProfile: (String) -> Unit,
+    onAddProfile: () -> Unit,
+    onEditActiveProfile: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -469,54 +478,84 @@ private fun CalculatedScreenContent(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        // Multi-Profile Bar
+        ProfileBar(
+            profiles = state.profiles,
+            activeProfileId = state.activeProfileId,
+            onSelectProfile = onSelectProfile,
+            onAddProfile = onAddProfile
+        )
 
-        // "● Live" Badge
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = CardBackground,
-            border = BorderStroke(1.dp, CardBorder)
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Active Profile Header & Live Indicator
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(LiveGreen, shape = CircleShape)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
+            Column {
                 Text(
-                    text = "Live",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp
+                    text = state.activeProfile.name,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp
                     ),
                     color = TextWhite
                 )
+                Text(
+                    text = "Profile • ${state.activeProfile.tag}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = TextMuted
+                )
+            }
+
+            // Live Pill Badge
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = OledCard,
+                border = BorderStroke(1.dp, OledCardBorder)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(EmeraldGreen, shape = CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "LIVE",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        ),
+                        color = TextWhite
+                    )
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "You are",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Medium
-            ),
-            color = TextSubtitle
-        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // 6 Age Display Cards (Years, Months, Days, Hours, Minutes, Seconds)
         AgeDisplayCards(age = state.age)
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Next Birthday Countdown Card
+        NextBirthdayCard(nextBirthday = state.nextBirthday)
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Planetary Age Section (Mercury, Venus, Earth, Mars, Jupiter, Saturn)
+        PlanetaryAgeSection(planetaryAges = state.planetaryAges)
+
         Spacer(modifier = Modifier.height(36.dp))
 
-        // Quote at bottom: "Every second counts."
+        // Quote
         Text(
             text = "“Every second counts.”",
             style = MaterialTheme.typography.bodyLarge.copy(
@@ -532,7 +571,7 @@ private fun CalculatedScreenContent(
 }
 
 @Composable
-private fun InputCard(
+private fun InputPickerCard(
     label: String,
     valueText: String,
     isPlaceholder: Boolean,
@@ -544,8 +583,8 @@ private fun InputCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
-        border = BorderStroke(1.dp, CardBorder)
+        colors = CardDefaults.cardColors(containerColor = OledCard),
+        border = BorderStroke(1.dp, OledCardBorder)
     ) {
         Column(
             modifier = Modifier
@@ -575,7 +614,7 @@ private fun InputCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = TextMuted.copy(alpha = 0.6f),
+                    tint = CyberCyan.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -591,156 +630,5 @@ private fun InputCard(
                 color = if (isPlaceholder) TextMuted else TextWhite
             )
         }
-    }
-}
-
-@Composable
-private fun EditDetailsDialog(
-    state: YourTimeUiState.Calculated,
-    onOpenDatePicker: () -> Unit,
-    onOpenTimePicker: () -> Unit,
-    onSave: () -> Unit,
-    onReset: () -> Unit,
-    onCancel: () -> Unit
-) {
-    val dateFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy")
-    val timeFormatter = DateTimeFormatter.ofPattern("hh:mm a")
-
-    val currentDate = state.editDate ?: state.birthDateTime.toLocalDate()
-    val currentTime = state.editTime ?: state.birthDateTime.toLocalTime()
-
-    AlertDialog(
-        onDismissRequest = onCancel,
-        title = {
-            Column {
-                Text(
-                    text = "Edit Your Details",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextWhite
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "You can update your birth date and time anytime.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextMuted
-                )
-            }
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                InputCard(
-                    label = "Date of Birth",
-                    valueText = currentDate.format(dateFormatter),
-                    isPlaceholder = false,
-                    icon = Icons.Outlined.CalendarToday,
-                    onClick = onOpenDatePicker
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                InputCard(
-                    label = "Time of Birth",
-                    valueText = currentTime.format(timeFormatter),
-                    isPlaceholder = false,
-                    icon = Icons.Outlined.Schedule,
-                    onClick = onOpenTimePicker
-                )
-
-                state.editErrorMessage?.let { err ->
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = err,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = onSave,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .background(SunsetGradient, shape = RoundedCornerShape(12.dp)),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Save Changes", color = TextWhite, fontWeight = FontWeight.Bold)
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedButton(
-                    onClick = onReset,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, CardBorder)
-                ) {
-                    Text("Reset", color = TextWhite)
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onCancel) {
-                Text("Cancel", color = TextMuted)
-            }
-        },
-        containerColor = SurfaceDark
-    )
-}
-
-@Composable
-private fun YourTimeBottomNav(
-    selectedTab: AppTab,
-    onTabSelected: (AppTab) -> Unit
-) {
-    NavigationBar(
-        containerColor = BackgroundDark,
-        tonalElevation = 0.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-    ) {
-        NavigationBarItem(
-            selected = selectedTab == AppTab.Home,
-            onClick = { onTabSelected(AppTab.Home) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Home,
-                    contentDescription = "Home"
-                )
-            },
-            label = { Text("Home") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CoralPrimary,
-                selectedTextColor = CoralPrimary,
-                unselectedIconColor = TextMuted,
-                unselectedTextColor = TextMuted,
-                indicatorColor = Color.Transparent
-            )
-        )
-
-        NavigationBarItem(
-            selected = selectedTab == AppTab.Insights,
-            onClick = { onTabSelected(AppTab.Insights) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Insights,
-                    contentDescription = "Insights"
-                )
-            },
-            label = { Text("Insights") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CoralPrimary,
-                selectedTextColor = CoralPrimary,
-                unselectedIconColor = TextMuted,
-                unselectedTextColor = TextMuted,
-                indicatorColor = Color.Transparent
-            )
-        )
     }
 }

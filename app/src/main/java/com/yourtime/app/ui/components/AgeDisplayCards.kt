@@ -3,8 +3,6 @@ package com.yourtime.app.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.WatchLater
@@ -29,14 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yourtime.app.domain.AgeResult
-import com.yourtime.app.ui.theme.CardBackground
-import com.yourtime.app.ui.theme.CardBorder
-import com.yourtime.app.ui.theme.CoralPrimary
+import com.yourtime.app.ui.theme.CyberCyan
+import com.yourtime.app.ui.theme.EmeraldGreen
+import com.yourtime.app.ui.theme.OledCard
+import com.yourtime.app.ui.theme.OledCardBorder
 import com.yourtime.app.ui.theme.TextMuted
 
 @Composable
@@ -99,9 +96,9 @@ private fun TimeUnitCard(
         modifier = modifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackground
+            containerColor = OledCard
         ),
-        border = BorderStroke(1.dp, CardBorder)
+        border = BorderStroke(1.dp, OledCardBorder)
     ) {
         Column(
             modifier = Modifier
@@ -110,15 +107,15 @@ private fun TimeUnitCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Large Bold Coral Digits
+            // Neon Digits
             Text(
                 text = "${data.value}",
                 style = MaterialTheme.typography.displayMedium.copy(
-                    fontSize = 46.sp,
+                    fontSize = 44.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.5).sp
                 ),
-                color = CoralPrimary
+                color = if (data.isSeconds) EmeraldGreen else CyberCyan
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -131,7 +128,7 @@ private fun TimeUnitCard(
                 Icon(
                     imageVector = data.icon,
                     contentDescription = null,
-                    tint = TextMuted,
+                    tint = if (data.isSeconds) EmeraldGreen.copy(alpha = 0.7f) else CyberCyan.copy(alpha = 0.7f),
                     modifier = Modifier.size(15.dp)
                 )
 
@@ -140,7 +137,7 @@ private fun TimeUnitCard(
                 Text(
                     text = data.label,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     ),
                     color = TextMuted

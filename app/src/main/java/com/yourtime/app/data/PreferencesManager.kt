@@ -5,75 +5,141 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.yourtime.app.domain.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.json.JSONArray
+import org.json.JSONObject
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "your_time_preferences")
 
-/**
- * Manages local, offline persistence of the user's birth date and time
- * using Android Jetpack DataStore Preferences.
- */
 class PreferencesManager(private val context: Context) {
 
-    private object PreferenceKeys {
-        val BIRTH_YEAR = intPreferencesKey("birth_year")
-        val BIRTH_MONTH = intPreferencesKey("birth_month")
-        val BIRTH_DAY = intPreferencesKey("birth_day")
-        val BIRTH_HOUR = intPreferencesKey("birth_hour")
-        val BIRTH_MINUTE = intPreferencesKey("birth_minute")
-        val BIRTH_SECOND = intPreferencesKey("birth_second")
+    private object Keys {
+        val PROFILES_JSON = stringPreferencesKey("profiles_json")
+        val ACTIVE_PROFILE_ID = stringPreferencesKey("active_profile_id")
+
+        // Legacy keys for automatic migration
+        val LEGACY_BIRTH_YEAR = intPreferencesKey("birth_year")
+        val LEGACY_BIRTH_MONTH = intPreferencesKey("birth_month")
+        val LEGACY_BIRTH_DAY = intPreferencesKey("birth_day")
+        val LEGACY_BIRTH_HOUR = intPreferencesKey("birth_hour")
+        val LEGACY_BIRTH_MINUTE = intPreferencesKey("birth_minute")
+        val LEGACY_BIRTH_SECOND = intPreferencesKey("birth_second")
     }
 
-    /**
-     * Emits the saved birth [LocalDateTime], or null if none is saved.
-     */
-    val birthDateTimeFlow: Flow<LocalDateTime?> = context.dataStore.data.map { preferences ->
-        val year = preferences[PreferenceKeys.BIRTH_YEAR]
-        val month = preferences[PreferenceKeys.BIRTH_MONTH]
-        val day = preferences[PreferenceKeys.BIRTH_DAY]
-        val hour = preferences[PreferenceKeys.BIRTH_HOUR] ?: 0
-        val minute = preferences[PreferenceKeys.BIRTH_MINUTE] ?: 0
-        val second = preferences[PreferenceKeys.BIRTH_SECOND] ?: 0
+    private val isoFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-        if (year != null && month != null && day != null) {
-            try {
-                LocalDateTime.of(year, month, day, hour, minute, second)
-            } catch (e: Exception) {
-                null
-            }
+    val profilesFlow: Flow<List<UserProfile>> = context.dataStore.data.map { preferences ->
+        val jsonStr = preferences[Keys.PROFILES_JSON]
+        if (!jsonStr.isNullOrBlank()) {
+            deserializeProfiles(jsonStr)
         } else {
-            null
+            // Check legacy birth date and auto-migrate
+            val legacyYear = preferences[Keys.LEGACY_BIRTH_YEAR]
+            val legacyMonth = preferences[Keys.LEGACY_BIRTH_MONTH]
+            val legacyDay = preferences[Keys.LEGACY_BIRTH_DAY]
+            if (legacyYear != null && legacyMonth != null && legacyDay != null) {
+                val hour = preferences[Keys.LEGACY_BIRTH_HOUR] ?: 0
+                val minute = preferences[Keys.LEGACY_BIRTH_MINUTE] ?: 0
+                val second = preferences[Keys.LEGACY_BIRTH_SECOND] ?: 0
+                val legacyDateTime = LocalDateTime.of(legacyYear, legacyMonth, legacyDay, hour, minute, second)
+                listOf(
+                    UserProfile(
+                        id = "default_me",
+                        name = "Me",
+                        birthDateTime = legacyDateTime,
+                        tag = "Me"
+                    )
+                )
+            } else {
+                emptyList()
+            }
         }
     }
 
-    /**
-     * Saves the birth date and time to DataStore Preferences.
-     */
-    suspend fun saveBirthDateTime(dateTime: LocalDateTime) {
+    val activeProfileIdFlow: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[Keys.ACTIVE_PROFILE_ID] ?: "default_me"
+    }
+
+    suspend fun saveProfiles(profiles: List<UserProfile>) {
         context.dataStore.edit { preferences ->
-            preferences[PreferenceKeys.BIRTH_YEAR] = dateTime.year
-            preferences[PreferenceKeys.BIRTH_MONTH] = dateTime.monthValue
-            preferences[PreferenceKeys.BIRTH_DAY] = dateTime.dayOfMonth
-            preferences[PreferenceKeys.BIRTH_HOUR] = dateTime.hour
-            preferences[PreferenceKeys.BIRTH_MINUTE] = dateTime.minute
-            preferences[PreferenceKeys.BIRTH_SECOND] = dateTime.second
+            preferences[Keys.PROFILES_JSON] = serializeProfiles(profiles)
         }
     }
 
-    /**
-     * Clears all saved birth data from local storage.
-     */
-    suspend fun clearBirthDateTime() {
+    suspend fun setActiveProfileId(profileId: String) {
         context.dataStore.edit { preferences ->
-            preferences.remove(PreferenceKeys.BIRTH_YEAR)
-            preferences.remove(PreferenceKeys.BIRTH_MONTH)
-            preferences.remove(PreferenceKeys.BIRTH_DAY)
-            preferences.remove(PreferenceKeys.BIRTH_HOUR)
-            preferences.remove(PreferenceKeys.BIRTH_MINUTE)
-            preferences.remove(PreferenceKeys.BIRTH_SECOND)
+            preferences[Keys.ACTIVE_PROFILE_ID] = profileId
         }
+    }
+
+    suspend fun addOrUpdateProfile(profile: UserProfile) {
+        context.dataStore.edit { preferences ->
+            val currentList = deserializeProfiles(preferences[Keys.PROFILES_JSON] ?: "").toMutableList()
+            val index = currentList.indexOfFirst { it.id == profile.id }
+            if (index >= 0) {
+                currentList[index] = profile
+            } else {
+                currentList.add(profile)
+            }
+            preferences[Keys.PROFILES_JSON] = serializeProfiles(currentList)
+            preferences[Keys.ACTIVE_PROFILE_ID] = profile.id
+        }
+    }
+
+    suspend fun deleteProfile(profileId: String) {
+        context.dataStore.edit { preferences ->
+            val currentList = deserializeProfiles(preferences[Keys.PROFILES_JSON] ?: "").toMutableList()
+            currentList.removeAll { it.id == profileId }
+            preferences[Keys.PROFILES_JSON] = serializeProfiles(currentList)
+            if (preferences[Keys.ACTIVE_PROFILE_ID] == profileId) {
+                preferences[Keys.ACTIVE_PROFILE_ID] = currentList.firstOrNull()?.id ?: ""
+            }
+        }
+    }
+
+    suspend fun clearAll() {
+        context.dataStore.edit { preferences ->
+            preferences.clear()
+        }
+    }
+
+    private fun serializeProfiles(profiles: List<UserProfile>): String {
+        val array = JSONArray()
+        profiles.forEach { p ->
+            val obj = JSONObject()
+            obj.put("id", p.id)
+            obj.put("name", p.name)
+            obj.put("birth", p.birthDateTime.format(isoFormatter))
+            obj.put("tag", p.tag)
+            array.put(obj)
+        }
+        return array.toString()
+    }
+
+    private fun deserializeProfiles(jsonStr: String): List<UserProfile> {
+        if (jsonStr.isBlank()) return emptyList()
+        val list = mutableListOf<UserProfile>()
+        try {
+            val array = JSONArray(jsonStr)
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                list.add(
+                    UserProfile(
+                        id = obj.optString("id", UUID.randomUUID().toString()),
+                        name = obj.optString("name", "Profile"),
+                        birthDateTime = LocalDateTime.parse(obj.getString("birth"), isoFormatter),
+                        tag = obj.optString("tag", "Me")
+                    )
+                )
+            }
+        } catch (_: Exception) {}
+        return list
     }
 }

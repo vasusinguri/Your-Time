@@ -1,33 +1,38 @@
 package com.yourtime.app.viewmodel
 
 import com.yourtime.app.domain.AgeResult
+import com.yourtime.app.domain.NextBirthdayResult
+import com.yourtime.app.domain.PlanetaryAge
+import com.yourtime.app.domain.UserProfile
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
- * UI State representing the screens and states of Your Time.
+ * UI State representing the state of Your Time app.
  */
 sealed interface YourTimeUiState {
 
     /**
-     * Initial state: Prompting user to enter birth date and time.
+     * Initial/Empty state: When no profile has been created yet.
      */
-    data class Initial(
+    data class Empty(
+        val initialName: String = "Me",
         val selectedDate: LocalDate? = null,
         val selectedTime: LocalTime = LocalTime.MIDNIGHT,
         val errorMessage: String? = null
     ) : YourTimeUiState
 
     /**
-     * Calculated state: Real-time live age ticker active.
+     * Ready state: Live ticking dashboard with active profile, next birthday, and planetary ages.
      */
-    data class Calculated(
-        val birthDateTime: LocalDateTime,
+    data class Ready(
+        val profiles: List<UserProfile>,
+        val activeProfileId: String,
+        val activeProfile: UserProfile,
         val age: AgeResult,
-        val isEditing: Boolean = false,
-        val editDate: LocalDate? = null,
-        val editTime: LocalTime? = null,
-        val editErrorMessage: String? = null
+        val nextBirthday: NextBirthdayResult,
+        val planetaryAges: List<PlanetaryAge>,
+        val isAddingProfile: Boolean = false,
+        val editingProfile: UserProfile? = null
     ) : YourTimeUiState
 }
