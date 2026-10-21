@@ -99,12 +99,11 @@ fun YourTimeScreen(
     val readyState = uiState as? YourTimeUiState.Ready
 
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .statusBarsPadding(),
+        modifier = modifier.fillMaxSize(),
         containerColor = OledBlack,
         topBar = {
             YourTimeTopBar(
+                modifier = Modifier.statusBarsPadding(),
                 onShare = {
                     readyState?.let { state ->
                         val age = state.age
@@ -273,10 +272,11 @@ private fun YourTimeTopBar(
     onDismissMenu: () -> Unit,
     onEditProfile: () -> Unit,
     onOpenWidgets: () -> Unit,
-    onResetAll: () -> Unit
+    onResetAll: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
