@@ -257,6 +257,8 @@ fun YourTimeScreen(
             },
             containerColor = OledCard
         )
+    }
+
     // Add Widget Dialog
     if (showAddWidgetDialog) {
         AddWidgetDialog(onDismiss = { showAddWidgetDialog = false })
