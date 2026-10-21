@@ -71,12 +71,14 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[Keys.PROFILES_JSON] = serializeProfiles(profiles)
         }
+        com.yourtime.app.widget.YourTimeWidgetUpdater.updateAllWidgets(context)
     }
 
     suspend fun setActiveProfileId(profileId: String) {
         context.dataStore.edit { preferences ->
             preferences[Keys.ACTIVE_PROFILE_ID] = profileId
         }
+        com.yourtime.app.widget.YourTimeWidgetUpdater.updateAllWidgets(context)
     }
 
     suspend fun addOrUpdateProfile(profile: UserProfile) {
@@ -91,6 +93,7 @@ class PreferencesManager(private val context: Context) {
             preferences[Keys.PROFILES_JSON] = serializeProfiles(currentList)
             preferences[Keys.ACTIVE_PROFILE_ID] = profile.id
         }
+        com.yourtime.app.widget.YourTimeWidgetUpdater.updateAllWidgets(context)
     }
 
     suspend fun deleteProfile(profileId: String) {
@@ -102,12 +105,14 @@ class PreferencesManager(private val context: Context) {
                 preferences[Keys.ACTIVE_PROFILE_ID] = currentList.firstOrNull()?.id ?: ""
             }
         }
+        com.yourtime.app.widget.YourTimeWidgetUpdater.updateAllWidgets(context)
     }
 
     suspend fun clearAll() {
         context.dataStore.edit { preferences ->
             preferences.clear()
         }
+        com.yourtime.app.widget.YourTimeWidgetUpdater.updateAllWidgets(context)
     }
 
     private fun serializeProfiles(profiles: List<UserProfile>): String {

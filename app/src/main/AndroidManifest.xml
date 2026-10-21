@@ -17,6 +17,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".widget.AgeWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_age_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_age_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PlanetaryWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_planetary_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_planetary_info" />
+        </receiver>
     </application>
 
 </manifest>

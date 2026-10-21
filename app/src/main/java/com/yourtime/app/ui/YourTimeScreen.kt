@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yourtime.app.ui.components.AddEditProfileDialog
+import com.yourtime.app.ui.components.AddWidgetDialog
 import com.yourtime.app.ui.components.AgeDisplayCards
 import com.yourtime.app.ui.components.DatePickerModal
 import com.yourtime.app.ui.components.NextBirthdayCard
@@ -93,6 +94,7 @@ fun YourTimeScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var showResetDialog by remember { mutableStateOf(false) }
+    var showAddWidgetDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
 
     val readyState = uiState as? YourTimeUiState.Ready
@@ -127,6 +129,10 @@ fun YourTimeScreen(
                 onEditProfile = {
                     showMenu = false
                     readyState?.let { viewModel.startEditingProfile(it.activeProfile) }
+                },
+                onOpenWidgets = {
+                    showMenu = false
+                    showAddWidgetDialog = true
                 },
                 onResetAll = {
                     showMenu = false
@@ -251,6 +257,9 @@ fun YourTimeScreen(
             },
             containerColor = OledCard
         )
+    // Add Widget Dialog
+    if (showAddWidgetDialog) {
+        AddWidgetDialog(onDismiss = { showAddWidgetDialog = false })
     }
 }
 
@@ -262,6 +271,7 @@ private fun YourTimeTopBar(
     showMenu: Boolean,
     onDismissMenu: () -> Unit,
     onEditProfile: () -> Unit,
+    onOpenWidgets: () -> Unit,
     onResetAll: () -> Unit
 ) {
     Row(
@@ -324,6 +334,10 @@ private fun YourTimeTopBar(
                             onClick = onEditProfile
                         )
                     }
+                    DropdownMenuItem(
+                        text = { Text("Home Screen Widgets", color = CyberCyan) },
+                        onClick = onOpenWidgets
+                    )
                     DropdownMenuItem(
                         text = { Text("Reset All", color = MaterialTheme.colorScheme.error) },
                         onClick = onResetAll
