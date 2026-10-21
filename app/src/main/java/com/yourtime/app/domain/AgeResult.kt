@@ -1,8 +1,11 @@
 package com.yourtime.app.domain
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Represents the exact breakdown of time lived.
  */
+@Immutable
 data class AgeResult(
     val years: Long,
     val months: Long,

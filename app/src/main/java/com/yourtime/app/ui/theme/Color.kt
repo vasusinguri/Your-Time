@@ -3,31 +3,42 @@ package com.yourtime.app.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// Deep OLED Pitch Black Palette
-val OledBlack = Color(0xFF000000)
+// Pure & Deep Obsidian Palette
+val OledBlack = Color(0xFF030508)
 val OledSurface = Color(0xFF080C14)
-val OledCard = Color(0xFF0E1420)
-val OledCardBorder = Color(0xFF1A2638)
+val OledCard = Color(0xFF0D121D)
+val OledCardBorder = Color(0xFF1B2437)
+val OledCardBorderSubtle = Color(0xFF121927)
 
-// Neon Cyber-Cyan & Emerald Accents
-val CyberCyan = Color(0xFF00F0FF)
+// Professional Liquid Accents (Refined Electric Cyan & Liquid Emerald)
+val CyberCyan = Color(0xFF00E5FF)
 val EmeraldGreen = Color(0xFF10B981)
-val CyanGlow = Color(0x3300F0FF)
-val EmeraldGlow = Color(0x3310B981)
+val IceBlue = Color(0xFF38BDF8)
+val CyanGlow = Color(0x1F00E5FF)
+val EmeraldGlow = Color(0x1F10B981)
 
-// Text Colors
+// Luxury Typography Colors
 val TextWhite = Color(0xFFFFFFFF)
-val TextMuted = Color(0xFF94A3B8)
+val TextMuted = Color(0xFF8896AB)
 val TextSubtitle = Color(0xFFCBD5E1)
+val TextHighlight = Color(0xFFF1F5F9)
 
 // Functional
 val ErrorRed = Color(0xFFFF5252)
 
-// Cyber Neon Gradient
+// Fluid Liquid Gradient
 val CyberGradient = Brush.horizontalGradient(
-    colors = listOf(CyberCyan, EmeraldGreen)
+    colors = listOf(Color(0xFF00E5FF), Color(0xFF10B981))
+)
+
+val LiquidFlowBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF00E5FF),
+        Color(0xFF06B6D4),
+        Color(0xFF10B981)
+    )
 )
 
 val CardGlowBorder = Brush.horizontalGradient(
-    colors = listOf(CyberCyan.copy(alpha = 0.5f), EmeraldGreen.copy(alpha = 0.5f))
+    colors = listOf(Color(0x3300E5FF), Color(0x3310B981))
 )

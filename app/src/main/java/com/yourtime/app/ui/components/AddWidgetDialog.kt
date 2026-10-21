@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cake
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -50,7 +49,6 @@ import com.yourtime.app.ui.theme.OledSurface
 import com.yourtime.app.ui.theme.TextMuted
 import com.yourtime.app.ui.theme.TextWhite
 import com.yourtime.app.widget.AgeWidgetProvider
-import com.yourtime.app.widget.PlanetaryWidgetProvider
 
 @Composable
 fun AddWidgetDialog(
@@ -100,18 +98,6 @@ fun AddWidgetDialog(
                     isPinSupported = isPinSupported,
                     onPinClicked = {
                         pinWidget(context, appWidgetManager, AgeWidgetProvider::class.java)
-                    }
-                )
-
-                // Widget 2: Cosmic Planetary
-                WidgetOptionCard(
-                    title = "Cosmic Age (Planetary)",
-                    subtitle = "Real-time astronomical age on Earth, Mercury, Mars, and Jupiter.",
-                    icon = Icons.Outlined.Public,
-                    accentColor = EmeraldGreen,
-                    isPinSupported = isPinSupported,
-                    onPinClicked = {
-                        pinWidget(context, appWidgetManager, PlanetaryWidgetProvider::class.java)
                     }
                 )
 

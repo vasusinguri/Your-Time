@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.yourtime.app.data.PreferencesManager
 import com.yourtime.app.domain.AgeCalculator
 import com.yourtime.app.domain.NextBirthdayCalculator
-import com.yourtime.app.domain.PlanetaryAgeCalculator
 import com.yourtime.app.domain.UserProfile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -53,7 +52,6 @@ class YourTimeViewModel(
                     val now = LocalDateTime.now()
                     val age = AgeCalculator.calculate(active.birthDateTime, now)
                     val nextBirthday = NextBirthdayCalculator.calculate(active.birthDateTime, now)
-                    val planetary = PlanetaryAgeCalculator.calculate(active.birthDateTime, now)
 
                     _uiState.update { current ->
                         when (current) {
@@ -62,16 +60,14 @@ class YourTimeViewModel(
                                 activeProfileId = active.id,
                                 activeProfile = active,
                                 age = age,
-                                nextBirthday = nextBirthday,
-                                planetaryAges = planetary
+                                nextBirthday = nextBirthday
                             )
                             is YourTimeUiState.Empty -> YourTimeUiState.Ready(
                                 profiles = profiles,
                                 activeProfileId = active.id,
                                 activeProfile = active,
                                 age = age,
-                                nextBirthday = nextBirthday,
-                                planetaryAges = planetary
+                                nextBirthday = nextBirthday
                             )
                         }
                     }
@@ -137,15 +133,13 @@ class YourTimeViewModel(
         val now = LocalDateTime.now()
         val age = AgeCalculator.calculate(target.birthDateTime, now)
         val nextBirthday = NextBirthdayCalculator.calculate(target.birthDateTime, now)
-        val planetary = PlanetaryAgeCalculator.calculate(target.birthDateTime, now)
 
         _uiState.update {
             current.copy(
                 activeProfileId = target.id,
                 activeProfile = target,
                 age = age,
-                nextBirthday = nextBirthday,
-                planetaryAges = planetary
+                nextBirthday = nextBirthday
             )
         }
 
@@ -226,14 +220,12 @@ class YourTimeViewModel(
                 if (AgeCalculator.isValid(birthDateTime, now)) {
                     val age = AgeCalculator.calculate(birthDateTime, now)
                     val nextBirthday = NextBirthdayCalculator.calculate(birthDateTime, now)
-                    val planetary = PlanetaryAgeCalculator.calculate(birthDateTime, now)
 
                     _uiState.update { current ->
                         if (current is YourTimeUiState.Ready && current.activeProfile.birthDateTime == birthDateTime) {
                             current.copy(
                                 age = age,
-                                nextBirthday = nextBirthday,
-                                planetaryAges = planetary
+                                nextBirthday = nextBirthday
                             )
                         } else {
                             current
@@ -257,12 +249,10 @@ class YourTimeViewModel(
             if (AgeCalculator.isValid(state.activeProfile.birthDateTime, now)) {
                 val age = AgeCalculator.calculate(state.activeProfile.birthDateTime, now)
                 val nextBirthday = NextBirthdayCalculator.calculate(state.activeProfile.birthDateTime, now)
-                val planetary = PlanetaryAgeCalculator.calculate(state.activeProfile.birthDateTime, now)
                 _uiState.update {
                     state.copy(
                         age = age,
-                        nextBirthday = nextBirthday,
-                        planetaryAges = planetary
+                        nextBirthday = nextBirthday
                     )
                 }
             }

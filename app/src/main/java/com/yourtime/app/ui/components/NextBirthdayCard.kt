@@ -164,7 +164,8 @@ private fun CountdownUnit(
                 text = String.format("%02d", value),
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
+                    fontSize = 22.sp,
+                    fontFeatureSettings = "tnum"
                 ),
                 color = if (isHighlight) EmeraldGreen else CyberCyan
             )

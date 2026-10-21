@@ -1,10 +1,12 @@
 package com.yourtime.app.domain
 
+import androidx.compose.runtime.Immutable
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
 import java.time.temporal.ChronoUnit
 
+@Immutable
 data class NextBirthdayResult(
     val days: Long,
     val hours: Long,

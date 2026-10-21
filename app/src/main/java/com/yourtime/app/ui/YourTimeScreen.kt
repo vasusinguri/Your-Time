@@ -66,7 +66,6 @@ import com.yourtime.app.ui.components.AddWidgetDialog
 import com.yourtime.app.ui.components.AgeDisplayCards
 import com.yourtime.app.ui.components.DatePickerModal
 import com.yourtime.app.ui.components.NextBirthdayCard
-import com.yourtime.app.ui.components.PlanetaryAgeSection
 import com.yourtime.app.ui.components.ProfileBar
 import com.yourtime.app.ui.components.TimePickerModal
 import com.yourtime.app.ui.theme.CyberCyan
@@ -467,15 +466,6 @@ private fun EmptyScreenContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
-
-        Text(
-            text = "“Time reveals everything.”",
-            style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
-            color = TextMuted,
-            textAlign = TextAlign.Center
-        )
-
         Spacer(modifier = Modifier.height(30.dp))
     }
 }
@@ -564,25 +554,7 @@ private fun ReadyScreenContent(
         // Next Birthday Countdown Card
         NextBirthdayCard(nextBirthday = state.nextBirthday)
 
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // Planetary Age Section (Mercury, Venus, Earth, Mars, Jupiter, Saturn)
-        PlanetaryAgeSection(planetaryAges = state.planetaryAges)
-
-        Spacer(modifier = Modifier.height(36.dp))
-
-        // Quote
-        Text(
-            text = "“Every second counts.”",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontStyle = FontStyle.Italic,
-                fontWeight = FontWeight.Medium
-            ),
-            color = TextSubtitle,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
