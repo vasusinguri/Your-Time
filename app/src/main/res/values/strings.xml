@@ -2,6 +2,4 @@
     <string name="app_name">Your Time</string>
     <string name="widget_age_name">Your Time - Age &amp; Birthday</string>
     <string name="widget_age_description">Live view of your current age and countdown to your next birthday.</string>
-    <string name="widget_planetary_name">Your Time - Cosmic Age</string>
-    <string name="widget_planetary_description">Track your real-time astronomical age on Earth, Mercury, Mars, and Jupiter.</string>
 </resources>

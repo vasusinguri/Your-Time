@@ -1,330 +1,161 @@
-# Your Time ⏳
+<div align="center">
 
-> **Know your time. Feel its value. Live it.**
+# ⏳ Your Time
 
-**Your Time** is a native Android application that calculates and displays exactly how long you have been alive based on your date and time of birth.
+**A precision chronometer and temporal awareness instrument for Android.**
 
-Instead of showing age as just **22 years old**, Your Time breaks it down into a live, continuously updating experience:
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Android](https://img.shields.io/badge/Android-8.0%2B%20(API%2026%2B)-3DDC84.svg?logo=android&logoColor=white)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20%2F%20Material%203-4285F4.svg?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![Offline First](https://img.shields.io/badge/Privacy-100%25%20Offline-10B981.svg)](https://github.com/vasusinguri/Your-Time)
+[![F-Droid Ready](https://img.shields.io/badge/F--Droid-Ready-1976D2.svg?logo=f-droid&logoColor=white)](https://f-droid.org)
 
-**22 Years · 11 Months · 3 Days · 7 Hours · 24 Minutes · 18 Seconds**
+<br/>
 
-Every second changes.
+> *"Most people measure life in years. Your Time reveals every second as it unfolds."*
 
-The goal is simple: **make the passage of time visible.**
+</div>
 
 ---
 
-## 🎯 Project Goal
+## 📖 Overview
 
-Most people think about their age in years:
+**Your Time** transforms the abstract concept of age into an active, living dashboard. Rather than presenting life as an arbitrary milestone like *"22 years old"*, it renders your exact temporal existence down to the second:
 
-> "I'm 22."
+$$\mathbf{22\text{ Years} \cdot 11\text{ Months} \cdot 3\text{ Days} \cdot 7\text{ Hours} \cdot 24\text{ Minutes} \cdot 18\text{ Seconds}}$$
 
-Your Time presents a different perspective:
-
-> "I've been alive for 22 years, 11 months, 3 days, 7 hours, 24 minutes and 18 seconds."
-
-The application is designed to create a stronger awareness of time by showing that life is not just measured in years, but in **months, days, hours, minutes and seconds**.
-
-The visual design uses a dark, cinematic interface combined with warm accent colors, subtle imagery and time-related icons to create a feeling of urgency, reflection and appreciation.
-
-The intention is not to frighten the user, but to encourage a simple thought:
-
-> **Every second is part of your life.**
+Engineered with a **Swiss-chronometer aesthetic**, deep OLED nocturnal contrast, and high-performance Compose optimizations, Your Time turns your lived journey into a reflective, mindful experience.
 
 ---
 
 ## ✨ Features
 
-### Live Age Counter
+- **⏱️ Real-Time Precision Chronometer**  
+  Live ticking display of your exact lived time broken down across Years, Months, Days, Hours, Minutes, and Seconds.
 
-Displays the user's current age in:
+- **⚡ Zero-Lag Architecture (60–120 FPS)**  
+  Built with `@androidx.compose.runtime.Immutable` state models, tabular monospaced numerals (`fontFeatureSettings = "tnum"`), and sub-composable skipping. Compose recomposes *only* the active ticking seconds card during runtime.
 
-* Years
-* Months
-* Days
-* Hours
-* Minutes
-* Seconds
+- **🎂 Next Birthday Countdown**  
+  Live day, hour, minute, and second countdown to your next birthday milestone, with special celebratory animations on your birthday.
 
-The counter continuously updates using the device's current time.
+- **👥 Multi-Profile Management**  
+  Easily add, switch, edit, and organize multiple profiles for family members, friends, or pets, each with custom relationship tags.
 
-### 📅 Date & Time of Birth
+- **📱 Native Home Screen Widgets**  
+  Android AppWidgets (`AppWidgetProvider`) delivering your live lived age and birthday countdown directly to your home screen with deep OLED styling.
 
-Users can enter their exact:
+- **🌌 Immersive Edge-to-Edge OLED Theme**  
+  True obsidian background (`#030508`) with hairline borders (`#1B2437`), vibrant cyber cyan and emerald accents, and transparent system status bars.
 
-* Date of birth
-* Time of birth
-
-### 💾 Local Storage
-
-Birth information is stored locally on the device so users do not need to enter it every time they open the application.
-
-### 🌐 Completely Offline
-
-Your Time does not require:
-
-* Internet
-* Backend servers
-* User accounts
-* Cloud databases
-
-The calculation happens directly on the device.
-
-### 🌙 Modern Interface
-
-The UI is designed around:
-
-* Dark visual styling
-* Warm time-inspired accent colors
-* Large numerical typography
-* Minimal icons
-* Strong visual hierarchy
-* Responsive Android layouts
-* Light and dark theme support
-
-### 🔒 Privacy-Focused
-
-Your date and time of birth remain on your device.
-
-No birth information is sent to a remote server in Version 1.
-
----
-
-## 🧠 How It Works
-
-The application takes two inputs:
-
-```text
-Date of Birth
-+
-Time of Birth
-```
-
-It then compares them with the device's current date and time.
-
-Conceptually:
-
-```text
-Birth Date & Time
-        ↓
-Current Date & Time
-        ↓
-Calendar-aware calculation
-        ↓
-Years
-Months
-Days
-Hours
-Minutes
-Seconds
-        ↓
-Live Android UI
-```
-
-The application uses calendar-aware date/time calculations rather than treating every month or year as a fixed number of seconds.
-
-This allows the application to correctly account for things such as:
-
-* Different month lengths
-* Leap years
-* February 29
-* Year transitions
-* Month transitions
-* Day transitions
-* Exact time differences
+- **🔒 100% Offline & Private**  
+  Zero tracking, zero analytics, zero external network requests. All data is persisted locally and securely on-device using Android Jetpack DataStore Preferences.
 
 ---
 
 ## 🛠️ Technology Stack
 
-**Platform:** Android
-
-**Language:** Kotlin
-
-**UI:** Jetpack Compose
-
-**Design:** Material 3
-
-**Build System:** Gradle
-
-**Date & Time:** Kotlin/Java `java.time` APIs
-
-**Local Storage:** DataStore Preferences
-
-**Architecture:** Simple separation of UI, state, business logic and local data
-
-**IDE:** Antigravity IDE
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Language** | Kotlin 2.3+ | Coroutines, Flow, idiomatic null-safety |
+| **UI Toolkit** | Jetpack Compose (BOM `2026.03.01`) | Declarative, reactive, hardware-accelerated UI |
+| **Design System** | Material Design 3 (Material You) | Dynamic shapes, luxury chronometer typography |
+| **Architecture** | MVI / Clean Architecture | Unidirectional Data Flow (UDF), immutable states |
+| **State Management** | Jetpack ViewModel + StateFlow | Lifecycle-aware coroutine ticker |
+| **Persistence** | Jetpack DataStore Preferences | Asynchronous, transactional local storage |
+| **Serialization** | Kotlinx Serialization | Fast, type-safe JSON serialization |
+| **Date & Time API** | Java Time (`java.time.*`) | Leap-year, month-length, and timezone-aware |
+| **Target SDK** | Android 16 (API 36) | Min SDK: Android 8.0 (API 26) |
 
 ---
 
-## 🏗️ Architecture
+## 🏛️ Architecture
 
-The project keeps the major responsibilities separated:
-
-```text
-Your Time
-│
-├── UI
-│   └── Jetpack Compose
-│
-├── ViewModel
-│   └── Application state
-│
-├── Domain
-│   └── Age calculation engine
-│
-└── Data
-    └── Local birth information
+```
+com.yourtime.app
+├── data/
+│   └── PreferencesManager.kt          # Jetpack DataStore local persistence
+├── domain/
+│   ├── AgeCalculator.kt               # Calendar-aware exact age engine
+│   ├── NextBirthdayCalculator.kt      # Leap-year aware next birthday engine
+│   ├── AgeResult.kt                   # Immutable chronometer data model
+│   └── UserProfile.kt                 # Profile data model with serialization
+├── ui/
+│   ├── components/
+│   │   ├── AgeDisplayCards.kt         # Precision chronometer display cards
+│   │   ├── NextBirthdayCard.kt        # Birthday countdown card
+│   │   ├── ProfileBar.kt              # Horizontal multi-profile selector
+│   │   ├── AddEditProfileDialog.kt    # Profile creation/edit modal
+│   │   └── AddWidgetDialog.kt         # In-app widget pinning helper
+│   ├── theme/                         # Color tokens, Typography, Obsidian Theme
+│   └── YourTimeScreen.kt              # Main edge-to-edge dashboard screen
+├── viewmodel/
+│   ├── YourTimeUiState.kt             # Immutable UI state definitions
+│   └── YourTimeViewModel.kt           # Lifecycle-aware ticker & intent handlers
+└── widget/
+    ├── AgeWidgetProvider.kt           # Native Android Home Screen Widget
+    └── YourTimeWidgetUpdater.kt       # Asynchronous widget broadcaster
 ```
 
-The calculation engine is kept independent from the UI so it can be tested separately.
+---
+
+## 🚀 Building from Source
+
+### Prerequisites
+- **JDK 17** (e.g. Eclipse Temurin 17)
+- **Android SDK** (API 26+)
+- **Git**
+
+### Clone & Compile
+
+```bash
+# Clone the repository
+git clone https://github.com/vasusinguri/Your-Time.git
+cd "Your-Time"
+
+# Run unit tests
+./gradlew testDebugUnitTest
+
+# Build Debug APK
+./gradlew assembleDebug
+```
+
+The compiled APK will be generated at:
+```
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+---
+
+## 📥 Download
+
+- **Pre-built APK**: Download the latest build directly from [GitHub Releases](https://github.com/vasusinguri/Your-Time/releases) or the root [`YourTime.apk`](./YourTime.apk).
+- **F-Droid**: Coming soon to the official F-Droid repository.
 
 ---
 
 ## 🧪 Testing
 
-The project should include tests for important date/time edge cases, including:
+The domain logic is backed by pure JUnit unit tests covering critical date/time edge cases:
+- Leap years and February 29th leap-day birthdays
+- Variable month lengths (30 vs 31 vs 28 days)
+- Midnight hour and second turnover accuracy
+- Future-date validation safeguards
 
-* Normal dates
-* Leap years
-* February 29 birthdays
-* Different month lengths
-* Midnight transitions
-* Month transitions
-* Year transitions
-* Future birth dates
-* Exact second/minute/hour differences
-
-The goal is to ensure that the displayed age is based on correct calendar and time calculations rather than approximate arithmetic.
-
----
-
-## 📱 Installation
-
-This project is initially intended for personal Android use and does not require Google Play Store distribution.
-
-The application can be built into an APK:
-
-```text
-Android Project
-      ↓
-Gradle Build
-      ↓
-APK
-      ↓
-Transfer to Android Phone
-      ↓
-Install
-```
-
-For development, a debug APK can be generated using the project's Gradle wrapper.
-
-Example:
-
+Run tests locally:
 ```bash
-./gradlew assembleDebug
+./gradlew testDebugUnitTest
 ```
-
-The generated APK will typically be located under:
-
-```text
-app/build/outputs/apk/debug/
-```
-
-A release APK can be generated after release signing is configured.
-
----
-
-## 🚀 Development Workflow
-
-```text
-Plan
- ↓
-Build UI
- ↓
-Implement age calculation
- ↓
-Add live counter
- ↓
-Add local storage
- ↓
-Test
- ↓
-Build APK
- ↓
-Install on Android device
- ↓
-Test on real hardware
- ↓
-Polish
-```
-
-The project is intentionally being developed in small phases rather than generating the entire application blindly.
-
----
-
-## 🎨 Design Philosophy
-
-Your Time is built around one central idea:
-
-### Make time visible.
-
-The interface intentionally avoids the appearance of a conventional calculator.
-
-Instead, it uses:
-
-* Large numbers to emphasize the current age
-* Dark backgrounds to create visual depth
-* Warm accent colors to represent passing time
-* Hourglass/time-related imagery
-* Minimal icons
-* Strong typography
-* Subtle visual transitions
-
-The design should make the user pause for a moment when they open the application.
-
----
-
-## 🔮 Future Possibilities
-
-Potential future features include:
-
-* Total days lived
-* Total hours lived
-* Total minutes lived
-* Total seconds lived
-* Next birthday countdown
-* Life milestones
-* Personal time statistics
-* Multiple profiles
-* Widgets
-* Home-screen live age widget
-* More advanced visualizations
-* Optional Play Store release
-
-These features are intentionally outside the initial Version 1 scope.
-
----
-
-## 📌 Project Status
-
-**Status:** Early Development
-
-The current objective is to build and validate the core Android experience, generate an installable APK, and test it on a physical Android device.
 
 ---
 
 ## 📄 License
 
-Add an appropriate open-source license here once the project's distribution model has been decided.
+This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
 
 ---
 
-## 👤 About
-
-**Your Time** is an experimental Android project built to explore native Android development, date/time computation, UI/UX design and the process of taking an application from an idea to a working APK.
-
-The project is intentionally simple in functionality, but its design goal is deeper:
-
-> **Don't just know how old you are. Know how much time you've already lived.**
+<div align="center">
+<sub>Crafted with precision by <b>Vasu Singuri</b>. Every second counts.</sub>
+</div>
